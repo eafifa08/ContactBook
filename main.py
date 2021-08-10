@@ -2,9 +2,30 @@
 import tkinter as tk
 import sqlite3
 
+window = tk.Tk()
+
 
 def create_table():
     pass
+
+
+def insert_contact_to_db(contact):
+    try:
+        conn = sqlite3.connect('contacts.sqlite')
+        cursor = conn.cursor()
+        query_insert_contact = """INSERT INTO contacts (name, tel)
+                                VALUES (?,?)
+        """
+        cursor.execute(query_insert_contact, (contact.name, contact.tel))
+        conn.commit()
+        cursor.close()
+    except sqlite3.Error as error:
+        print('Ошибка при подключении к sqlite', error)
+    finally:
+        if(conn):
+            conn.close()
+            print('Соединение с SQLite закрыто')
+
 
 
 def init_database():
@@ -15,7 +36,7 @@ def init_database():
 
         query_select_version = "select sqlite_version();"
         query_create_table = 'CREATE TABLE IF NOT EXISTS contacts' \
-                             ' (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);'
+                             ' (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, tel INTEGER UNIQUE);'
         cursor.execute(query_select_version)
         record = cursor.fetchall()
         print('Версия базы данных SQLite:', record)
@@ -32,34 +53,54 @@ def init_database():
 class Contact:
     def __init__(self, name, tel, address='none', email='none'):
         print(f'Contact of {name} initializated')
-        self.name = name
+        self.name = str(name)
         self.tel = tel
         self.address = address
         self.email = email
 
 
+def show_new_contact():
+    print('show_new_contact')
+    e_name = tk.Entry(window)
+    e_name.grid(row=0, column=2)
+    e_tel = tk.Entry(window)
+    e_tel.grid(row=0, column=3)
+    return (e_name, e_tel)
+
+
+def unshow_new_contact(entries):
+    for entry in entries:
+        entry.grid_remove()
+    print('unshow_new_contact')
+
+
 def start_window():
     init_database()
-    window = tk.Tk()
+
     window.title("Contact Book")
     button_add = tk.Button(window, text="Новый контакт")
-    button_add.pack()
-    frame = tk.Frame(borderwidth=5, relief=tk.GROOVE)
-    label = tk.Label(master=frame, text="Hello", bg='red')
-    label.pack()
-    frame.pack()
+    button_add.grid(row=0, column=1)
+    button_add.bind("button_add", show_new_contact)
+    button_add.config(command=show_new_contact)
+    #label = tk.Label(window, text="Hello", bg='red')
+
+    #label.grid(row=0, column=0)
+    #label.pack()
     contacts = []
     for i in range(5):
-        contact = Contact(i, i+i)
+        contact = Contact(i, str(i) * 8)
         contacts.append(contact)
     gorgona_contact = Contact('Ж', 8908888741)
     contacts.append(gorgona_contact)
     listbox = tk.Listbox(window)
     for contact in contacts:
         listbox.insert(tk.END, contact.name)
-    listbox.pack()
+        insert_contact_to_db(contact)
+    listbox.grid(row=0, column=0, rowspan=5)
+    new_entries = show_new_contact()
+    unshow_new_contact(new_entries)
 
-    window.geometry("400x400")
+    window.geometry("600x400")
     window.mainloop()
 
 
