@@ -22,6 +22,21 @@ def insert_contact_to_db(contact):
             conn.close()
 
 
+def delete_contact_from_db(contact_name):
+    try:
+        conn = sqlite3.connect('contacts.sqlite')
+        cursor = conn.cursor()
+        query_insert_contact = """DELETE FROM contacts WHERE name=?"""
+        cursor.execute(query_insert_contact, (contact_name,))
+        conn.commit()
+        cursor.close()
+    except sqlite3.Error as error:
+        print('Ошибка при подключении к sqlite', error)
+    finally:
+        if(conn):
+            conn.close()
+
+
 def get_all_contacts_from_db():
     contacts = []
     try:
@@ -75,6 +90,8 @@ class MyListbox(tk.Listbox):
         tk.Listbox.__init__(self, parent, *args, **kwargs)
         self.popup_menu = tk.Menu(self, tearoff=0)
         self.popup_menu.add_command(label="Delete", command=self.delete_selected)
+        parent.config(menu=self.popup_menu)
+        parent.bind('<Button-3>', self.popup)
 
     def popup(self, event):
         try:
@@ -84,7 +101,9 @@ class MyListbox(tk.Listbox):
 
     def delete_selected(self):
         for i in self.curselection()[::-1]:
-            self.delete(i)
+            delete_contact_from_db(self.get(i))
+            refresh_listbox()
+            #self.delete(i)
 
 
 def show_new_contact():
@@ -148,13 +167,9 @@ def start_window():
     listbox.grid(row=0, column=0, rowspan=5)
     show_new_contact()
     unshow_new_contact()
-
     menu = tk.Menu(window, tearoff=0)
     window.config(menu=menu)
     menu.add_command(label='test', command=show_new_contact)
-
-
-
     window.geometry("600x400")
     window.mainloop()
 
