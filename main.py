@@ -20,7 +20,6 @@ def insert_contact_to_db(contact):
     finally:
         if(conn):
             conn.close()
-            print('Соединение с SQLite закрыто')
 
 
 def get_all_contacts_from_db():
@@ -39,7 +38,6 @@ def get_all_contacts_from_db():
     finally:
         if(conn):
             conn.close()
-            print('Соединение с SQLite закрыто')
         return contacts
 
 
@@ -62,12 +60,10 @@ def init_database():
     finally:
         if(sqlite_connection):
             sqlite_connection.close()
-            print('Соединение с SQLite закрыто')
 
 
 class Contact:
     def __init__(self, name, tel, address='none', email='none'):
-        print(f'Contact of {name} initializated')
         self.name = str(name)
         self.tel = tel
         self.address = address
@@ -75,30 +71,34 @@ class Contact:
 
 
 def show_new_contact():
-    print('show_new_contact')
-    e_name = tk.Entry(window, name='name')
-    e_name.grid(row=0, column=2)
-    e_tel = tk.Entry(window, name='tel')
-    e_tel.grid(row=0, column=3)
+    lbl_name = tk.Label(window, name='lbl_name', text='имя контакта')
+    lbl_name.grid(row=0, column=2)
+    entr_name = tk.Entry(window, name='entr_name')
+    entr_name.grid(row=1, column=2)
+    lbl_tel = tk.Label(window, name='lbl_tel', text='номер телефона')
+    lbl_tel.grid(row=0, column=3)
+    entr_tel = tk.Entry(window, name='entr_tel')
+    entr_tel.grid(row=1, column=3)
     btn_save_new_contact = tk.Button(window, text='сохранить', name='to_save')
     btn_save_new_contact.config(command=save_new_contact)
     btn_save_new_contact.grid(row=0, column=4)
-    return (e_name, e_tel, btn_save_new_contact)
+    return (entr_name, entr_tel, lbl_name, lbl_tel, btn_save_new_contact)
 
 
 def unshow_new_contact():
-    elements = [window.nametowidget('tel'), window.nametowidget('name'), window.nametowidget('to_save')]
+    elements = [window.nametowidget('entr_tel'), window.nametowidget('entr_name'),
+                window.nametowidget('lbl_name'), window.nametowidget('lbl_tel'), window.nametowidget('to_save')]
     for element in elements:
         element.grid_remove()
-    print('unshow_new_contact')
 
 
 def save_new_contact():
-    name = window.nametowidget('name').get()
-    tel = window.nametowidget('tel').get()
-    print(name)
+    name = window.nametowidget('entr_name').get()
+    tel = window.nametowidget('entr_tel').get()
     contact = Contact(name, tel)
-    insert_contact_to_db(contact)
+    if name != '' and tel.isdecimal():
+        print(name + ' ' + tel)
+        insert_contact_to_db(contact)
     refresh_listbox()
     unshow_new_contact()
 
@@ -123,8 +123,6 @@ def start_window():
     for i in range(5):
         contact = Contact(i, str(i) * 8)
         contacts.append(contact)
-    gorgona_contact = Contact('Ж', 8908888741)
-    contacts.append(gorgona_contact)
     listbox = tk.Listbox(window, name='lstbx_contacts')
     scrollbar = tk.Scrollbar(listbox, orient='vertical')
     for contact in contacts:
