@@ -70,6 +70,23 @@ class Contact:
         self.email = email
 
 
+class MyListbox(tk.Listbox):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Listbox.__init__(self, parent, *args, **kwargs)
+        self.popup_menu = tk.Menu(self, tearoff=0)
+        self.popup_menu.add_command(label="Delete", command=self.delete_selected)
+
+    def popup(self, event):
+        try:
+            self.popup_menu.tk_popup(event.x_root, event.y_root, 0)
+        finally:
+            self.popup_menu.grab_release()
+
+    def delete_selected(self):
+        for i in self.curselection()[::-1]:
+            self.delete(i)
+
+
 def show_new_contact():
     lbl_name = tk.Label(window, name='lbl_name', text='имя контакта')
     lbl_name.grid(row=0, column=2)
@@ -123,7 +140,7 @@ def start_window():
     for i in range(5):
         contact = Contact(i, str(i) * 8)
         contacts.append(contact)
-    listbox = tk.Listbox(window, name='lstbx_contacts')
+    listbox = MyListbox(window, name='lstbx_contacts')
     scrollbar = tk.Scrollbar(listbox, orient='vertical')
     for contact in contacts:
         insert_contact_to_db(contact)
@@ -131,6 +148,12 @@ def start_window():
     listbox.grid(row=0, column=0, rowspan=5)
     show_new_contact()
     unshow_new_contact()
+
+    menu = tk.Menu(window, tearoff=0)
+    window.config(menu=menu)
+    menu.add_command(label='test', command=show_new_contact)
+
+
 
     window.geometry("600x400")
     window.mainloop()
